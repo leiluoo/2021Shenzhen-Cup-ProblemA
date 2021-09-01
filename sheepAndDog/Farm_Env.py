@@ -12,10 +12,10 @@ from math import cos, pi, sqrt, fabs, pow, acos, sin
 from gym.envs.classic_control import rendering
 
 ####################################hyper parameters#################################
-INIT_V = 20      # velocity of dog
-INIT_v = 10    # velocity of sheep
+INIT_V = 15      # velocity of dog
+INIT_v = 7.5    # velocity of sheep
 RADIUS = 200     # radius of farmland
-DELTA_T = 0.5   # interval
+DELTA_T = 1   # interval
 ALL_T = 20      # total time
 #####################################################################################
 
@@ -82,16 +82,18 @@ class Farm_Env(Env):
                     self.dogPos[1] = self.dogPos[1] + self.V/RADIUS * self.t
                 else:
                     self.dogPos[1] = self.dogPos[1] - self.V/RADIUS * self.t
-            elif(self.pre_theta <= self.dogPos[1] and self.pre_theta > 0 or self.pre_theta > self.dogPos[1] + pi and self.pre_theta <= 0):
+            elif(self.pre_theta <= self.dogPos[1] and self.pre_theta > 0 or self.pre_theta > self.dogPos[1] + pi and self.pre_theta <= 2*pi):
                 if (self.pre_angle > self.cur_angle):
-                    self.angle_pos = self.pre_angle + self.gamma
-                else:
                     self.angle_pos = self.pre_angle - self.gamma
-                if (self.pre_theta <= self.dogPos[1] and self.pre_theta > 0 or self.pre_theta > self.dogPos[1] + pi and self.pre_theta <= 0):
+                else:
+                    self.angle_pos = self.pre_angle + self.gamma
+                    if(self.angle_pos > pi):
+                        self.angle_pos -= pi
+                if (self.pre_theta <= self.dogPos[1] and self.pre_theta > 0 or self.pre_theta > self.dogPos[1] + pi and self.pre_theta <= 2*pi):
                     self.dogPos[1] = self.dogPos[1] - self.V / RADIUS * self.t
                 else:
                     self.dogPos[1] = self.dogPos[1] + self.V / RADIUS * self.t
-        if (self.dogPos[1] >= pi):
+        else:
             if (self.pre_theta > self.dogPos[1] and self.pre_theta <= 2 * pi or self.pre_theta <= self.dogPos[1] - pi and self.pre_theta > 0):
                 if (self.pre_angle > self.cur_angle):
                     self.angle_pos = self.pre_angle - self.gamma
@@ -110,6 +112,9 @@ class Farm_Env(Env):
                     self.dogPos[1] = self.dogPos[1] - self.V / RADIUS * self.t
                 else:
                     self.dogPos[1] = self.dogPos[1] + self.V / RADIUS * self.t
+
+        if (self.dogPos[1] > 2 * pi):
+            self.dogPos[1] = self.dogPos[1] - 2 * pi
 
         self.all_time -= 0.1
         # Calculate Reward
