@@ -8,14 +8,14 @@ from gym.spaces import Discrete, Box
 from gym.utils import seeding
 import numpy as np
 import random
-from math import cos, pi, sqrt, fabs, pow, acos
+from math import cos, pi, sqrt, fabs, pow, acos, sin
 from gym.envs.classic_control import rendering
 
 ####################################hyper parameters#################################
-INIT_V = 1      # velocity of dog
-INIT_v = 0.5    # velocity of sheep
-RADIUS = 20     # radius of farmland
-DELTA_T = 0.1   # interval
+INIT_V = 20      # velocity of dog
+INIT_v = 10    # velocity of sheep
+RADIUS = 200     # radius of farmland
+DELTA_T = 0.5   # interval
 ALL_T = 20      # total time
 #####################################################################################
 
@@ -23,14 +23,17 @@ class Farm_Env(Env):
     metadata = {'render.modes': ['human']}
 
     def __init__(self):
+        self.viewer = rendering.Viewer(600, 600)
+        self.v = INIT_v
+        self.V = INIT_V
         # dog's position
         self.dogPos = np.array([RADIUS, random.uniform(0,2) * pi])
         # sheep's position
-        self.sheepPos = np.array([random.uniform(0,1) * RADIUS, random.uniform(0,2) * pi])
+        self.sheepPos = np.array([random.uniform(0.001,1) * RADIUS, random.uniform(0,2) * pi])
         # action the sheep can take, the degree it turns
-        self.action_space = Box(low = np.array([0]), high = np.array([pi])) # todo:check the method
+        self.action_space = Box(low = np.array([0]), high = np.array([pi]), dtype = np.float32) # todo:check the method
         # the distance between sheep and the boarder of farmland , the angle bwtween sheep and dog
-        self.observation_space = Box(low = np.array([0, 0]), high = np.array([RADIUS, pi]))
+        self.observation_space = Box(low = np.array([0, 0]), high = np.array([RADIUS, pi]), dtype = np.float32)
         # time interval
         self.t = DELTA_T
         self.all_time = ALL_T
@@ -57,7 +60,10 @@ class Farm_Env(Env):
         self.b = -2 * cos(action + pi/2) * self.pre_rho
         self.c = pow(self.pre_rho,2) - pow(RADIUS,2)
         self.distance = (-self.b - sqrt(pow(self.b,2) - 4 * self.c)) / (4 * self.c)
-        self.gamma = acos((pow(self.pre_rho,2) + pow(RADIUS,2) - pow(self.distance,2)) / (2 * RADIUS * self.pre_rho))
+        self.cos_gamma = (pow(self.pre_rho,2) + pow(RADIUS,2) - pow(self.distance,2)) / (2 * RADIUS * self.pre_rho)
+        if(self.cos_gamma > 1):
+            self.cos_gamma = 1
+        self.gamma = acos(self.cos_gamma)
 
         self.pre_angle = fabs(self.pre_theta - self.dogPos[1])
         if(self.pre_angle > pi):
@@ -147,7 +153,7 @@ class Farm_Env(Env):
         return self.state
 
     def render(self, mode='human'):
-        self.viewer = rendering.Viewer(600, 600)
+        self.viewer.geoms.clear()
         # 方式一
         ring = rendering.make_circle(radius=200,
                                      res=50,
@@ -158,16 +164,19 @@ class Farm_Env(Env):
         ring.set_color(0, 0, 0)
         ring.set_linewidth(5)  # 设置线宽
         sheep = rendering.make_circle(radius=10,
-                                     res=3,
+                                     res=50,
                                      filled=True)
         dog =  rendering.make_circle(radius=10,
-                                      res = 4,
+                                      res = 50,
                                       filled = True)
+
+        sheep.set_color(0, 0, 255)
+        dog.set_color(255, 0, 0)
 
         # 添加一个平移操作
         transform1 = rendering.Transform(translation=(300, 300))  # 相对偏移
-        transform_s = rendering.Transform(translation=(320, 280))
-        transform_d = rendering.Transform(translation=(300, 500))
+        transform_s = rendering.Transform(translation=(300 + self.sheepPos[0] * cos(self.sheepPos[1]), 300 + self.sheepPos[0] * sin(self.sheepPos[1])))
+        transform_d = rendering.Transform(translation=(300 + self.dogPos[0] * cos(self.dogPos[1]), 300 + self.dogPos[0] * sin(self.dogPos[1])))
         # 让圆添加平移这个属性
         ring.add_attr(transform1)
         sheep.add_attr(transform_s)
