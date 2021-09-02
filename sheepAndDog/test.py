@@ -12,6 +12,6 @@ env.reset()
 for i in range(500):
     env.step(env.action_space.sample())
     env.render()
-    time.sleep(0.1)
+    time.sleep(0.01)
 
 env.close()

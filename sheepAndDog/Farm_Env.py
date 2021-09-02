@@ -12,11 +12,10 @@ from math import cos, pi, sqrt, fabs, pow, acos, sin
 from gym.envs.classic_control import rendering
 
 ####################################hyper parameters#################################
-INIT_V = 15      # velocity of dog
-INIT_v = 7.5    # velocity of sheep
+INIT_V = 30      # velocity of dog
+INIT_v = 20    # velocity of sheep
 RADIUS = 200     # radius of farmland
-DELTA_T = 1   # interval
-ALL_T = 20      # total time
+DELTA_T = 0.1   # interval
 #####################################################################################
 class Dog(object):
     def __init__(self):
@@ -25,65 +24,86 @@ class Dog(object):
 
     def updatePos(self, action, pre_sheep, cur_sheep):
         # do some math
-        self.b = -2 * cos(action + pi / 2) * pre_sheep[0]
-        self.c = pow(pre_sheep[0], 2) - pow(RADIUS, 2)
-        self.distance = (-self.b - sqrt(pow(self.b, 2) - 4 * self.c)) / (4 * self.c)
-        self.cos_gamma = (pow(pre_sheep[0], 2) + pow(RADIUS, 2) - pow(self.distance, 2)) / (2 * RADIUS * pre_sheep[0])
-        if (self.cos_gamma > 1):
-            self.cos_gamma = 1
-        self.gamma = acos(self.cos_gamma)
+        b = -2 * cos(action + pi / 2) * pre_sheep[0]
+        c = pow(pre_sheep[0], 2) - pow(RADIUS, 2)
+        distance = (-b - sqrt(pow(b, 2) - 4 * c)) / (4 * c)
+        cos_gamma = (pow(pre_sheep[0], 2) + pow(RADIUS, 2) - pow(distance, 2)) / (2 * RADIUS * pre_sheep[0])
+        if (cos_gamma > 1):
+            cos_gamma = 1
+        gamma = acos(cos_gamma)
 
-        self.pre_angle = fabs(pre_sheep[1] - self.pos[1])
-        if (self.pre_angle > pi):
-            self.pre_angle = 2 * pi - self.pre_angle
-        self.cur_angle = fabs(cur_sheep[1] - self.pos[1])
-        if (self.cur_angle > pi):
-            self.cur_angle = 2 * pi - self.cur_angle
+        pre_angle = fabs(pre_sheep[1] - self.pos[1])
+        if (pre_angle > pi):
+            pre_angle = 2 * pi - pre_angle
+        cur_angle = fabs(cur_sheep[1] - self.pos[1])
+        if (cur_angle > pi):
+            cur_angle = 2 * pi - cur_angle
         # dog choose its action
+        print(cur_sheep[0], end='\t')
+
         if (self.pos[1] < pi):
             if (pre_sheep[1] > self.pos[1] and pre_sheep[1] <= self.pos[1] + pi):
-                if (self.pre_angle > self.cur_angle):
-                    self.angle_pos = self.pre_angle - self.gamma
+                if (pre_angle > cur_angle):
+                    angle_pos = fabs(pre_sheep[1] - gamma)
                 else:
-                    self.angle_pos = self.pre_angle + self.gamma
-                if (self.angle_pos > self.pos[1] and self.angle_pos <= self.pos[1] + pi):
+                    angle_pos = pre_sheep[1] + gamma
+                    if (angle_pos > 2 * pi):
+                        angle_pos = 2 * pi - angle_pos
+                if (angle_pos > self.pos[1] and angle_pos <= self.pos[1] + pi):
                     self.pos[1] = self.pos[1] + self.V / RADIUS * DELTA_T
+                    print('1')
                 else:
                     self.pos[1] = self.pos[1] - self.V / RADIUS * DELTA_T
+                    print('2')
             elif (pre_sheep[1] <= self.pos[1] and pre_sheep[1] > 0 or pre_sheep[1] > self.pos[
                 1] + pi and pre_sheep[1] <= 2 * pi):
-                if (self.pre_angle > self.cur_angle):
-                    self.angle_pos = self.pre_angle - self.gamma
+                if (pre_angle > cur_angle):
+                    angle_pos = fabs(pre_sheep[1] - gamma)
                 else:
-                    self.angle_pos = self.pre_angle + self.gamma
-                    if (self.angle_pos > pi):
-                        self.angle_pos -= pi
+                    angle_pos = pre_sheep[1] + gamma
+                    if (angle_pos > 2 * pi):
+                        angle_pos = 2 * pi - angle_pos
                 if (pre_sheep[1] <= self.pos[1] and pre_sheep[1] > 0 or pre_sheep[1] > self.pos[
                     1] + pi and pre_sheep[1] <= 2 * pi):
                     self.pos[1] = self.pos[1] - self.V / RADIUS * DELTA_T
+                    print('3')
                 else:
                     self.pos[1] = self.pos[1] + self.V / RADIUS * DELTA_T
+                    print('4')
+            else:
+                print('error')
         else:
             if (pre_sheep[1] > self.pos[1] and pre_sheep[1] <= 2 * pi or pre_sheep[1] <= self.pos[
                 1] - pi and pre_sheep[1] > 0):
-                if (self.pre_angle > self.cur_angle):
-                    self.angle_pos = self.pre_angle - self.gamma
+                if (pre_angle > cur_angle):
+                    angle_pos = fabs(pre_sheep[1] - gamma)
                 else:
-                    self.angle_pos = self.pre_angle + self.gamma
+                    angle_pos = pre_sheep[1] + gamma
+                    if (angle_pos > 2 * pi):
+                        angle_pos = 2 * pi - angle_pos
                 if (pre_sheep[1] > self.pos[1] and pre_sheep[1] <= 2 * pi or pre_sheep[1] <= self.pos[
                     1] - pi and pre_sheep[1] > 0):
                     self.pos[1] = self.pos[1] + self.V / RADIUS * DELTA_T
+                    print('5')
                 else:
                     self.pos[1] = self.pos[1] - self.V / RADIUS * DELTA_T
+                    print('6')
             elif (pre_sheep[1] > self.pos[1] - pi and pre_sheep[1] <= self.pos[1]):
-                if (self.pre_angle > self.cur_angle):
-                    self.angle_pos = self.pre_angle + self.gamma
+                if (pre_angle > cur_angle):
+                    angle_pos = pre_sheep[1] + gamma
+                    if (angle_pos > 2 * pi):
+                        angle_pos = 2 * pi - angle_pos
                 else:
-                    self.angle_pos = self.pre_angle - self.gamma
+                    angle_pos = fabs(pre_sheep[1] - gamma)
                 if (pre_sheep[1] > self.pos[1] - pi and pre_sheep[1] <= self.pos[1]):
                     self.pos[1] = self.pos[1] - self.V / RADIUS * DELTA_T
+                    print('7')
                 else:
                     self.pos[1] = self.pos[1] + self.V / RADIUS * DELTA_T
+                    print('8')
+            else:
+                print('error')
+        print(self.pos[1])
         # Judge whether the angle is out of bounds
         if (self.pos[1] > 2 * pi):
             self.pos[1] = self.pos[1] - 2 * pi
