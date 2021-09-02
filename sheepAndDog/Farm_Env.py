@@ -12,15 +12,17 @@ from math import cos, pi, sqrt, fabs, pow, acos, sin
 from gym.envs.classic_control import rendering
 
 ####################################hyper parameters#################################
-INIT_V = 30      # velocity of dog
-INIT_v = 20    # velocity of sheep
-RADIUS = 200     # radius of farmland
-DELTA_T = 0.1   # interval
+INIT_V = 30  # velocity of dog
+INIT_v = 20  # velocity of sheep
+RADIUS = 200  # radius of farmland
+DELTA_T = 0.1  # interval
+
+
 #####################################################################################
 class Dog(object):
     def __init__(self):
         self.V = INIT_V
-        self.pos = np.array([RADIUS, random.uniform(0,2) * pi])
+        self.pos = np.array([RADIUS, random.uniform(0, 2) * pi])
 
     def updatePos(self, action, pre_sheep, cur_sheep):
         # do some math
@@ -33,38 +35,36 @@ class Dog(object):
         gamma = acos(cos_gamma)
 
         pre_angle = fabs(pre_sheep[1] - self.pos[1])
-        if (pre_angle > pi):
+        if pre_angle > pi:
             pre_angle = 2 * pi - pre_angle
         cur_angle = fabs(cur_sheep[1] - self.pos[1])
-        if (cur_angle > pi):
+        if cur_angle > pi:
             cur_angle = 2 * pi - cur_angle
         # dog choose its action
         print(cur_sheep[0], end='\t')
 
-        if (self.pos[1] < pi):
-            if (pre_sheep[1] > self.pos[1] and pre_sheep[1] <= self.pos[1] + pi):
-                if (pre_angle > cur_angle):
+        if self.pos[1] < pi:
+            if self.pos[1] < pre_sheep[1] <= self.pos[1] + pi:
+                if pre_angle > cur_angle:
                     angle_pos = fabs(pre_sheep[1] - gamma)
                 else:
                     angle_pos = pre_sheep[1] + gamma
-                    if (angle_pos > 2 * pi):
+                    if angle_pos > 2 * pi:
                         angle_pos = 2 * pi - angle_pos
-                if (angle_pos > self.pos[1] and angle_pos <= self.pos[1] + pi):
+                if angle_pos > self.pos[1] and angle_pos <= self.pos[1] + pi:
                     self.pos[1] = self.pos[1] + self.V / RADIUS * DELTA_T
                     print('1')
                 else:
                     self.pos[1] = self.pos[1] - self.V / RADIUS * DELTA_T
                     print('2')
-            elif (pre_sheep[1] <= self.pos[1] and pre_sheep[1] > 0 or pre_sheep[1] > self.pos[
-                1] + pi and pre_sheep[1] <= 2 * pi):
-                if (pre_angle > cur_angle):
+            elif self.pos[1] >= pre_sheep[1] >= 0 or self.pos[1] + pi < pre_sheep[1] <= 2 * pi:
+                if pre_angle > cur_angle:
                     angle_pos = fabs(pre_sheep[1] - gamma)
                 else:
                     angle_pos = pre_sheep[1] + gamma
-                    if (angle_pos > 2 * pi):
+                    if angle_pos > 2 * pi:
                         angle_pos = 2 * pi - angle_pos
-                if (pre_sheep[1] <= self.pos[1] and pre_sheep[1] > 0 or pre_sheep[1] > self.pos[
-                    1] + pi and pre_sheep[1] <= 2 * pi):
+                if self.pos[1] >= pre_sheep[1] >= 0 or self.pos[1] + pi < pre_sheep[1] <= 2 * pi:
                     self.pos[1] = self.pos[1] - self.V / RADIUS * DELTA_T
                     print('3')
                 else:
@@ -73,29 +73,27 @@ class Dog(object):
             else:
                 print('error')
         else:
-            if (pre_sheep[1] > self.pos[1] and pre_sheep[1] <= 2 * pi or pre_sheep[1] <= self.pos[
-                1] - pi and pre_sheep[1] > 0):
-                if (pre_angle > cur_angle):
+            if self.pos[1] < pre_sheep[1] <= 2 * pi or self.pos[1] - pi >= pre_sheep[1] >= 0:
+                if pre_angle > cur_angle:
                     angle_pos = fabs(pre_sheep[1] - gamma)
                 else:
                     angle_pos = pre_sheep[1] + gamma
-                    if (angle_pos > 2 * pi):
+                    if angle_pos > 2 * pi:
                         angle_pos = 2 * pi - angle_pos
-                if (pre_sheep[1] > self.pos[1] and pre_sheep[1] <= 2 * pi or pre_sheep[1] <= self.pos[
-                    1] - pi and pre_sheep[1] > 0):
+                if self.pos[1] < pre_sheep[1] <= 2 * pi or self.pos[1] - pi >= pre_sheep[1] >= 0:
                     self.pos[1] = self.pos[1] + self.V / RADIUS * DELTA_T
                     print('5')
                 else:
                     self.pos[1] = self.pos[1] - self.V / RADIUS * DELTA_T
                     print('6')
-            elif (pre_sheep[1] > self.pos[1] - pi and pre_sheep[1] <= self.pos[1]):
-                if (pre_angle > cur_angle):
+            elif self.pos[1] - pi < pre_sheep[1] <= self.pos[1]:
+                if pre_angle > cur_angle:
                     angle_pos = pre_sheep[1] + gamma
-                    if (angle_pos > 2 * pi):
+                    if angle_pos > 2 * pi:
                         angle_pos = 2 * pi - angle_pos
                 else:
                     angle_pos = fabs(pre_sheep[1] - gamma)
-                if (pre_sheep[1] > self.pos[1] - pi and pre_sheep[1] <= self.pos[1]):
+                if self.pos[1] - pi < pre_sheep[1] <= self.pos[1]:
                     self.pos[1] = self.pos[1] - self.V / RADIUS * DELTA_T
                     print('7')
                 else:
@@ -105,25 +103,39 @@ class Dog(object):
                 print('error')
         print(self.pos[1])
         # Judge whether the angle is out of bounds
-        if (self.pos[1] > 2 * pi):
+        if self.pos[1] > 2 * pi:
             self.pos[1] = self.pos[1] - 2 * pi
+        if self.pos[1] < 0:
+            self.pos[1] = self.pos[1] + 2 * pi
 
-        if ((fabs(cur_sheep[1] - self.pos[1])) >= pi):
+        if (fabs(cur_sheep[1] - self.pos[1])) >= pi:
             included_angle = fabs(cur_sheep[1] - self.pos[1])
         else:
             included_angle = 2 * pi - fabs(cur_sheep[1] - self.pos[1])
+        # 0 represent that dog is on the sheep's left semi-circle, 1 vice versa
+        if cur_sheep[1] < pi:
+            if cur_sheep[1] <= self.pos[1] < cur_sheep[1] + pi:
+                rotation = 0
+            elif cur_sheep[1] + pi <= self.pos[1] < 2 * pi or 0 <= self.pos[1] < cur_sheep[1]:
+                rotation = 1
+        else:
+            if cur_sheep[1] <= self.pos[1] <= 2 * pi or 0 <= self.pos[1] < cur_sheep[1] - pi:
+                rotation = 0
+            elif cur_sheep[1] - pi <= self.pos[1] < cur_sheep[1]:
+                rotation = 1
         # return next state
-        return np.array([cur_sheep[0], included_angle])
+        return np.array([cur_sheep[0], included_angle, rotation])
 
     def resetPos(self):
         self.pos = np.array([RADIUS, random.uniform(0, 2) * pi])
 
+
 class Sheep(object):
     def __init__(self):
         self.v = INIT_v
-        self.pos = np.array([random.uniform(0.001,1) * RADIUS, random.uniform(0,2) * pi])
+        self.pos = np.array([random.uniform(0.001, 1) * RADIUS, random.uniform(0, 2) * pi])
 
-    def updatePos(self,action):
+    def updatePos(self, action):
         self.pre_rho = self.pos[0]
         self.pre_theta = self.pos[1]
         if (action < pi / 2):
@@ -132,14 +144,14 @@ class Sheep(object):
                     action) * DELTA_T * cos((pi / 2) + action))
             self.pos[1] = self.pos[1] - acos(
                 (pow(self.pos[0], 2) + pow(self.pre_rho, 2) - pow(self.v * cos(action) * DELTA_T, 2)) / (
-                            2 * self.pos[0] * self.pre_rho))
+                        2 * self.pos[0] * self.pre_rho))
         elif (action > pi / 2):
             self.pos[0] = sqrt(
                 pow(self.v * cos(pi - action) * DELTA_T, 2) + pow(self.pos[0], 2) - 2 * self.pos[0] * cos(
                     pi - action) * DELTA_T * cos((pi / 2) + pi - action))
             self.pos[1] = self.pos[1] + acos(
                 (pow(self.pos[0], 2) + pow(self.pre_rho, 2) - pow(self.v * cos(pi - action) * DELTA_T, 2)) / (
-                            2 * self.pos[0] * self.pre_rho))
+                        2 * self.pos[0] * self.pre_rho))
         else:
             self.pos[0] += self.v * DELTA_T
 
@@ -147,7 +159,8 @@ class Sheep(object):
             self.pos[1] = self.pos[1] - 2 * pi
 
     def resetPos(self):
-        self.pos = np.array([random.uniform(0.001,1) * RADIUS, random.uniform(0,2) * pi])
+        self.pos = np.array([random.uniform(0.001, 1) * RADIUS, random.uniform(0, 2) * pi])
+
 
 class Farm_Env(Env):
     metadata = {'render.modes': ['human']}
@@ -159,9 +172,9 @@ class Farm_Env(Env):
         # sheep initilaization
         self.sheep = Sheep()
         # action the sheep can take, the degree it turns
-        self.action_space = Box(low = np.array([0]), high = np.array([pi]), dtype = np.float32) # todo:check the method
+        self.action_space = Box(low=np.array([0]), high=np.array([pi]), dtype=np.float32)  # todo:check the method
         # the distance between sheep and the boarder of farmland , the angle bwtween sheep and dog
-        self.observation_space = Box(low = np.array([0, 0]), high = np.array([RADIUS, pi]), dtype = np.float32)
+        self.observation_space = Box(low=np.array([0, 0, 0]), high=np.array([RADIUS, pi, 1.1]), dtype=np.float32)
         ####
         self.seed()
 
@@ -174,9 +187,9 @@ class Farm_Env(Env):
         ## update dog's position and get next state
         state = self.dog.updatePos(action, self.pre_sheep, self.cur_sheep)
         # Calculate Reward
-        reward = 0.5 * (state[0] - RADIUS/2)/RADIUS + 0.5 * (state[1] - pi/2)/pi
+        reward = 0.5 * (state[0] - RADIUS / 2) / RADIUS + 0.5 * (state[1] - pi / 2) / pi
         # check if game is done
-        if(self.sheep.pos[0] > RADIUS):
+        if (self.sheep.pos[0] > RADIUS):
             done = True
         else:
             done = False
@@ -211,19 +224,21 @@ class Farm_Env(Env):
         ring.set_color(0, 0, 0)
         ring.set_linewidth(5)  # 设置线宽
         sheep = rendering.make_circle(radius=5,
-                                     res=50,
-                                     filled=True)
-        dog =  rendering.make_circle(radius=5,
-                                      res = 50,
-                                      filled = True)
+                                      res=50,
+                                      filled=True)
+        dog = rendering.make_circle(radius=5,
+                                    res=50,
+                                    filled=True)
 
         sheep.set_color(0, 0, 255)
         dog.set_color(255, 0, 0)
 
         # 添加一个平移操作
         transform1 = rendering.Transform(translation=(300, 300))  # 相对偏移
-        transform_s = rendering.Transform(translation=(300 + self.sheep.pos[0] * cos(self.sheep.pos[1]), 300 + self.sheep.pos[0] * sin(self.sheep.pos[1])))
-        transform_d = rendering.Transform(translation=(300 + self.dog.pos[0] * cos(self.dog.pos[1]), 300 + self.dog.pos[0] * sin(self.dog.pos[1])))
+        transform_s = rendering.Transform(translation=(
+            300 + self.sheep.pos[0] * cos(self.sheep.pos[1]), 300 + self.sheep.pos[0] * sin(self.sheep.pos[1])))
+        transform_d = rendering.Transform(
+            translation=(300 + self.dog.pos[0] * cos(self.dog.pos[1]), 300 + self.dog.pos[0] * sin(self.dog.pos[1])))
         # 让圆添加平移这个属性
         ring.add_attr(transform1)
         sheep.add_attr(transform_s)
@@ -233,7 +248,7 @@ class Farm_Env(Env):
         self.viewer.add_geom(sheep)
         self.viewer.add_geom(dog)
 
-        return self.viewer.render(return_rgb_array= mode=='rgb_array')
+        return self.viewer.render(return_rgb_array=mode == 'rgb_array')
 
     def seed(self, seed=None):
         self.np_random, seed = seeding.np_random(seed)
